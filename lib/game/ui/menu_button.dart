@@ -1,5 +1,6 @@
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
+import 'package:flutter/material.dart' show IconData;
 import 'package:flutter/painting.dart';
 
 /// Shared menu button colors and metrics.
@@ -28,11 +29,15 @@ abstract class MenuButton extends PositionComponent with TapCallbacks {
     required this.text,
     this.style = MenuButtonStyle.primary,
     this.fontSize = 24,
+    this.labelStyle,
   }) : super(size: size, anchor: Anchor.center);
 
   final String text;
   final MenuButtonStyle style;
   final double fontSize;
+
+  /// When set (e.g. Material Icons), used instead of [fontSize] for the label.
+  final TextStyle? labelStyle;
 
   late TextComponent _label;
 
@@ -69,21 +74,30 @@ abstract class MenuButton extends PositionComponent with TapCallbacks {
       anchor: Anchor.center,
       position: size / 2,
       textRenderer: TextPaint(
-        style: TextStyle(
-          fontSize: fontSize,
-          color: const Color(0xFFFFFFFF),
-          fontWeight: FontWeight.bold,
-          shadows: const [
-            Shadow(
-              color: Color(0x601B5E20),
-              offset: Offset(2, 2),
-              blurRadius: 2,
+        style: labelStyle ??
+            TextStyle(
+              fontSize: fontSize,
+              color: const Color(0xFFFFFFFF),
+              fontWeight: FontWeight.bold,
+              shadows: const [
+                Shadow(
+                  color: Color(0x601B5E20),
+                  offset: Offset(2, 2),
+                  blurRadius: 2,
+                ),
+              ],
             ),
-          ],
-        ),
       ),
     );
     add(_label);
+  }
+
+  void setLabelText(String value) {
+    _label.text = value;
+  }
+
+  void setMaterialIcon(IconData icon) {
+    _label.text = String.fromCharCode(icon.codePoint);
   }
 
   @override
