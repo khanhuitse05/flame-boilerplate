@@ -1,70 +1,54 @@
 import 'dart:async';
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
-import 'package:flutter/material.dart';
-import '../my_casual_game.dart';
-import '../../features/gameplay/gameplay_delegate.dart';
-import '../../features/gameplay/tap_game/tap_game_delegate.dart';
-import '../../features/gameplay/tap_game_2/tap_game_2_delegate.dart';
-import '../../features/gameplay/tap_game_3/tap_game_3_delegate.dart';
+import 'package:flame_audio/flame_audio.dart';
+
+import '../../core/di/locator.dart';
+import '../../features/audio/audio_controller.dart';
 import '../../features/gameplay/color_match/color_match_delegate.dart';
+import '../../features/gameplay/gameplay_delegate.dart';
+import '../my_casual_game.dart';
 
 class GameplayRoute extends Component with HasGameReference<MyCasualGame> {
-  late TextComponent scoreText;
   late GameplayDelegate delegate;
 
   @override
   Future<void> onLoad() async {
-    scoreText = TextComponent(
-      text: 'Score: 0',
-      position: Vector2(20, 20),
-      textRenderer: TextPaint(
-        style: const TextStyle(color: Colors.white, fontSize: 24),
-      ),
-    );
-
     void onGameOverCB(bool isWin, int score) {
+      if (!isWin) {
+        getIt<AudioController>().playSfx('game-over.mp3');
+      }
       game.lastScore = score;
       game.lastGameWon = isWin;
       game.router.pushReplacementNamed('game_over');
     }
 
-    switch (game.selectedGameType) {
-      case GameType.tap:
-        delegate = TapGameDelegate(
-          onGameOver: onGameOverCB,
-          onScoreUpdated: (score) => scoreText.text = 'Score: $score',
-        );
-        break;
-      case GameType.tap2:
-        delegate = TapGame2Delegate(
-          onGameOver: onGameOverCB,
-          onScoreUpdated: (score) => scoreText.text = 'Score: $score',
-        );
-        break;
-      case GameType.tap3:
-        delegate = TapGame3Delegate(
-          onGameOver: onGameOverCB,
-          onScoreUpdated: (score) => scoreText.text = 'Score: $score',
-        );
-        break;
-      case GameType.colorMatch:
-        delegate = ColorMatchDelegate(
-          onGameOver: onGameOverCB,
-          onScoreUpdated: (score) => scoreText.text = 'Level: ${score + 1}',
-        );
-        break;
-    }
-
+    delegate = ColorMatchDelegate(
+      onGameOver: onGameOverCB,
+      onScoreUpdated: (_) {},
+    );
     add(delegate);
-    add(scoreText);
+
+    await FlameAudio.audioCache.loadAll([
+      'background.mp3',
+      'ting.mp3',
+      'game-over.mp3',
+    ]);
+
     add(PauseButton(position: Vector2(game.size.x - 60, 20)));
   }
 
   @override
   void onMount() {
     super.onMount();
+    getIt<AudioController>().playBgm('background.mp3');
     delegate.reset();
+  }
+
+  @override
+  void onRemove() {
+    getIt<AudioController>().stopBgm();
+    super.onRemove();
   }
 
   @override

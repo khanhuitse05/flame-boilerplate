@@ -2,7 +2,7 @@ import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flutter/painting.dart';
 
-/// Design tokens from IntroRoute for consistency.
+/// Shared menu button colors and metrics.
 class MenuButtonColors {
   static const primaryTop = Color(0xFF66BB6A);
   static const primaryMid = Color(0xFF43A047);

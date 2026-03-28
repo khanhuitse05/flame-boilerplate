@@ -9,7 +9,6 @@ import 'features/audio/audio_controller.dart';
 import 'features/settings/settings_cubit.dart';
 import 'features/score/score_cubit.dart';
 import 'game/my_casual_game.dart';
-import 'game/ui/select_game_overlay.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -49,12 +48,6 @@ class GameView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GameWidget.controlled(
-      gameFactory: MyCasualGame.new,
-      overlayBuilderMap: {
-        'select_game': (context, game) =>
-            SelectGameOverlay(game: game as MyCasualGame),
-      },
-    );
+    return GameWidget.controlled(gameFactory: MyCasualGame.new);
   }
 }

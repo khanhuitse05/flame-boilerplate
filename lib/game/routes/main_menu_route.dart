@@ -17,7 +17,7 @@ class MainMenuRoute extends Component with HasGameReference<MyCasualGame> {
   Future<void> onLoad() async {
     _background = BackgroundGradient(
       colorsResolver: () {
-        final colors = game.selectedGameType.cardColors;
+        final colors = GameType.colorMatch.cardColors;
         return [colors.top, colors.mid, colors.bottom];
       },
     );
@@ -55,14 +55,13 @@ class MainMenuRoute extends Component with HasGameReference<MyCasualGame> {
     add(_gameNameText);
     add(_highScoreText);
     add(PlayButton(size: Vector2(240, 56)));
-    add(BackButton(size: Vector2(200, 48)));
   }
 
   @override
   void onMount() {
     super.onMount();
-    final gameName = game.selectedGameType.name;
-    final displayName = game.selectedGameType.displayName;
+    final gameName = GameType.colorMatch.name;
+    final displayName = GameType.colorMatch.displayName;
     final highScore = getIt<LocalStorage>().getHighScore(gameName);
     _gameNameText.text = displayName;
     _highScoreText.text = 'High Score: $highScore';
@@ -79,9 +78,6 @@ class MainMenuRoute extends Component with HasGameReference<MyCasualGame> {
     children.whereType<PlayButton>().forEach(
       (b) => b.position = size / 2 + Vector2(0, 30),
     );
-    children.whereType<BackButton>().forEach(
-      (b) => b.position = size / 2 + Vector2(0, 105),
-    );
   }
 }
 
@@ -95,13 +91,3 @@ class PlayButton extends MenuButton with HasGameReference<MyCasualGame> {
   }
 }
 
-class BackButton extends MenuButton with HasGameReference<MyCasualGame> {
-  BackButton({required super.size})
-      : super(text: 'Back', style: MenuButtonStyle.secondary, fontSize: 20);
-
-  @override
-  void onTap() {
-    game.router.pop();
-    game.overlays.add('select_game');
-  }
-}

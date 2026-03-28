@@ -2,20 +2,20 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Run flame_boilerplate",
+            "name": "Run",
             "request": "launch",
             "type": "dart",
             "program": "lib/main.dart"
         },
         {
-            "name": "Run flame_boilerplate (Profile)",
+            "name": "Run (Profile)",
             "request": "launch",
             "type": "dart",
             "program": "lib/main.dart",
             "flutterMode": "profile"
         },
         {
-            "name": "Run flame_boilerplate (Release)",
+            "name": "Run (Release)",
             "request": "launch",
             "type": "dart",
             "program": "lib/main.dart",
