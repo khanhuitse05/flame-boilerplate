@@ -19,10 +19,7 @@ class MainMenuRoute extends Component with HasGameReference<MyCasualGame> {
   @override
   Future<void> onLoad() async {
     _background = BackgroundGradient(
-      colorsResolver: () {
-        final colors = GameType.colorMatch.cardColors;
-        return [colors.top, colors.mid, colors.bottom];
-      },
+      colorsResolver: () => GameType.colorMatch.menuGradientColors,
     );
     add(_background);
 

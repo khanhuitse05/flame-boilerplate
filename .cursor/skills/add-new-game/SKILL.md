@@ -17,7 +17,7 @@ Copy and track progress:
 
 ```
 - [ ] 1. Add GameType enum value
-- [ ] 2. Add game config (displayName, iconPath, cardColors)
+- [ ] 2. Add game config (displayName, iconPath, menuGradientColors)
 - [ ] 3. Create gameplay delegate
 - [ ] 4. Wire delegate in GameplayRoute
 - [ ] 5. Add icon asset
@@ -43,7 +43,7 @@ Use `camelCase` (e.g. `colorMatch`, `memoryCards`).
 
 **File:** `lib/game/config/game_type_config.dart`
 
-Add a case for the new `GameType` in all three switch expressions: `displayName`, `iconPath`, and `cardColors`.
+Add a case for the new `GameType` in each switch expression: `displayName`, `iconPath` (if you use it), and `menuGradientColors`.
 
 ```dart
 // displayName
@@ -52,16 +52,15 @@ GameType.yourNewGame => 'Your Game Name',
 // iconPath
 GameType.yourNewGame => 'assets/images/ic_your_game.png',
 
-// cardColors
-GameType.yourNewGame => const GameCardColors(
-  top: Color(0xFF...),
-  mid: Color(0xFF...),
-  bottom: Color(0xFF...),
-  bevel: Color(0xFF...),
-),
+// menuGradientColors (top → mid → bottom for main menu background)
+GameType.yourNewGame => const [
+  Color(0xFF...),
+  Color(0xFF...),
+  Color(0xFF...),
+],
 ```
 
-Pick a distinct gradient (top lighter, bevel darkest). Existing examples: green (tap), orange (tap2), purple (tap3), blue (colorMatch).
+Pick a distinct gradient (top lighter, bottom darkest). Existing example: blue stops for `colorMatch`.
 
 ---
 

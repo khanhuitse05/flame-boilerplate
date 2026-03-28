@@ -35,7 +35,7 @@ The game boots into **`MainMenuRoute`** (`initialRoute: 'menu'` in `MyCasualGame
 | `lib/game/my_casual_game.dart`          | `FlameGame` subclass, `GameType` enum, router table, `lastScore` / `lastGameWon` for game-over screen. |
 | `lib/game/routes/`                      | One component per screen: menu, gameplay, pause, game over.                                            |
 | `lib/game/ui/`                          | `MenuButton`, `BackgroundGradient`, `DimOverlay`.                                                      |
-| `lib/game/config/game_type_config.dart` | Per–game-type display name and menu gradient (`GameCardColors`).                                       |
+| `lib/game/config/game_type_config.dart` | Per–game-type display name and menu gradient (`menuGradientColors`).                                  |
 | `lib/features/gameplay/`                | `GameplayDelegate` + concrete games (e.g. `color_match/color_match_delegate.dart`).                    |
 | `lib/core/`                             | DI (`locator.dart`), `LocalStorage`.                                                                   |
 | `lib/features/`                         | Audio, settings, score cubits.                                                                         |
@@ -71,7 +71,7 @@ All of these are **Flame components** under `lib/game/routes/`. Adjust layout in
 
 ### Main menu — `main_menu_route.dart`
 
-- **Background**: `BackgroundGradient` with `colorsResolver` reading `GameType.colorMatch.cardColors` (change when you add modes in `game_type_config.dart`).
+- **Background**: `BackgroundGradient` with `colorsResolver` reading `GameType.colorMatch.menuGradientColors` (change when you add modes in `game_type_config.dart`).
 - **Title / high score**: `onMount` sets text from `GameType...displayName` and `LocalStorage.getHighScore(gameName)` where `gameName` is the enum’s `.name` (e.g. `colorMatch`).
 - **Play**: `PlayButton` extends `MenuButton` and calls `game.router.pushReplacementNamed('play')`.
 
@@ -116,7 +116,7 @@ The sample **`ColorMatchDelegate`** shows a full implementation: layout in `onGa
 ### 3. Branding and high scores — `GameType` + `game_type_config.dart`
 
 - Add enum values in `my_casual_game.dart`.
-- Extend `displayName` and `cardColors` in `game_type_config.dart` for menu title and gradient.
+- Extend `displayName` and `menuGradientColors` in `game_type_config.dart` for menu title and gradient.
 - Point **main menu** and **game over** at the active `GameType` for `gameName` / display strings (today they reference `GameType.colorMatch` directly; with multiple modes you would pass the selected type from the game instance).
 
 For a longer checklist (multiple games on a selection screen, assets, etc.), see the project skill **Add New Game** at `.cursor/skills/add-new-game/SKILL.md` and align it with your current router if the skill mentions routes your fork does not use.
