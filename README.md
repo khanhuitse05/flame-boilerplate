@@ -1,134 +1,167 @@
-# Casual Game Boilerplate
+# Flame Casual Game Boilerplate
 
-A robust, feature-rich boilerplate for starting casual 2D games using [Flutter](https://flutter.dev/) and [Flame](https://flame-engine.org/). 
+A **starter template** for 2D casual games built with [Flutter](https://flutter.dev/) and [Flame](https://flame-engine.org/). It is meant for teams who want to ship gameplay fast: routing between **main menu**, **gameplay**, **pause**, and **game over** is already wired, with shared UI primitives and hooks for audio, persistence, and optional BLoC state.
 
-This template provides an out-of-the-box architecture for routing, state management, dependency injection, audio, persistence, and localization—saving you hours of setup time so you can focus immediately on gameplay mechanics.
-
----
-
-## 🚀 Getting Started
-
-1. **Clone or Download** this repository as the base for your new game.
-2. **Setup Dependencies:** Run `flutter pub get`.
-3. **Run the App:** Press `F5` in VS Code, or open a terminal and run `flutter run`.
+Use this repo as a **GitHub template** or clone it, rename the app, then customize the four screens and plug in your own `GameplayDelegate`.
 
 ---
 
-## 🏗 Architecture Overview
+## What you get
 
-The boilerplate is structured to clearly separate Flutter-level configuration, global state, and the Flame game engine:
-
-- **`lib/core/`**: Dependency injection (`get_it`), Local Storage (`shared_preferences`), and global constants.
-- **`lib/features/`**: Flutter-level features like Settings (sound toggles), Score tracking (`flutter_bloc`), and Audio controllers.
-- **`lib/game/`**: The entire Flame game implementation including `FlameGame` instance, router, scenes, and components.
-- **`lib/l10n/`**: Localization `.arb` files (`gen_l10n`).
-
----
-
-## 🛠 How to Reuse Common Features
-
-This template comes with heavy lifting already done. Here is how you use the built-in services natively across Flutter and Flame:
-
-### 1. Audio System
-The `AudioController` is globally accessible via `get_it`. It automatically listens to user settings for muting/unmuting so you never have to check settings logic before playing sounds.
-- **To play background music:** Place your file in `assets/audio/` and call:
-  ```dart
-  getIt<AudioController>().playBgm('bgm.mp3');
-  ```
-- **To play a sound effect:**
-  ```dart
-  getIt<AudioController>().playSfx('jump.mp3');
-  ```
-- **Stopping music:** `getIt<AudioController>().stopBgm();`
-
-### 2. Global State & Storage (Settings/Score)
-The app uses `flutter_bloc` (`Cubit`) for state, which automatically syncs with device storage via `shared_preferences`.
-- **Modify State:**
-  ```dart
-  // From Flutter UI or passed into Flame:
-  context.read<ScoreCubit>().addScore(10);
-  context.read<SettingsCubit>().toggleSound();
-  ```
-Because `MultiBlocProvider` sits at the top of the Flutter widget tree, you can access these states anywhere outside the Flame engine (e.g., in a Flutter-based HUD overlaid on top of the game).
-
-### 3. Localization
-The boilerplate uses standard `gen_l10n`.
-Add your strings to `lib/l10n/app_en.arb`. Flutter generates the `AppLocalizations` class.
-To access translated strings from Flutter Widgets/Overlays:
-```dart
-Text(AppLocalizations.of(context)!.startGame)
-```
-
-### 4. Routing Flow
-We manage scenes using Flame's built-in `RouterComponent`.
-To switch between scenes (e.g., transition from the Main Menu to Gameplay):
-```dart
-// Within any Component that has the `HasGameReference<MyCasualGame>` mixin:
-game.router.pushReplacementNamed('play');
-```
-To pause the game:
-```dart
-// Pushing the pause route natively stops updates to the underlying GameplayRoute
-game.router.pushNamed('pause'); 
-```
+- **Flame `RouterComponent`** with named routes: `menu`, `play`, `pause`, `game_over`.
+- **Sample game** (`ColorMatchDelegate`) showing how gameplay lives behind a single delegate interface.
+- **Reusable in-game UI**: gradient backgrounds, styled buttons, pause dim overlay (`lib/game/ui/`).
+- **Services**: `get_it` DI, `LocalStorage` (high scores per game id), `AudioController` (BGM/SFX respecting settings).
+- **Flutter shell**: `GameWidget`, Material app, `flutter_bloc` providers for settings and score (usable from Flutter overlays if you add them later).
+- **Localization** scaffold via `gen_l10n` (`lib/l10n/`).
 
 ---
 
-## 🎮 Implementing Core Gameplay
+## Quick start
 
-When starting a new game, you primarily work within the `lib/game/` directory. Here is the step-by-step approach to modifying this folder:
+1. Clone or use this repository as a template for a new project.
+2. Run `flutter pub get`.
+3. Run the app: `flutter run` (or your IDE run action).
 
-### Step 1: Preload Key Assets
-Before users enter gameplay, make sure heavy assets are loaded inside `LoadingRoute` (`lib/game/routes/loading_route.dart`).
-```dart
-@override
-Future<void> onLoad() async {
-  // Load spritesheets and heavy audio upfront here so the game doesn't lag mid-play:
-  await Flame.images.loadAll(['player.png', 'enemy_sheet.png']);
-  await FlameAudio.audioCache.loadAll(['bgm.mp3', 'jump.mp3']);
-  
-  // Transition to main menu
-  game.router.pushReplacementNamed('menu');
-}
+The game boots into **`MainMenuRoute`** (`initialRoute: 'menu'` in `MyCasualGame`).
+
+---
+
+## Project layout
+
+| Path                                    | Role                                                                                                   |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `lib/main.dart`                         | App entry, `GameWidget.controlled(gameFactory: MyCasualGame.new)`, BLoC providers.                     |
+| `lib/game/my_casual_game.dart`          | `FlameGame` subclass, `GameType` enum, router table, `lastScore` / `lastGameWon` for game-over screen. |
+| `lib/game/routes/`                      | One component per screen: menu, gameplay, pause, game over.                                            |
+| `lib/game/ui/`                          | `MenuButton`, `BackgroundGradient`, `DimOverlay`.                                                      |
+| `lib/game/config/game_type_config.dart` | Per–game-type display name and menu gradient (`GameCardColors`).                                       |
+| `lib/features/gameplay/`                | `GameplayDelegate` + concrete games (e.g. `color_match/color_match_delegate.dart`).                    |
+| `lib/core/`                             | DI (`locator.dart`), `LocalStorage`.                                                                   |
+| `lib/features/`                         | Audio, settings, score cubits.                                                                         |
+
+---
+
+## Router flow
+
+```mermaid
+flowchart LR
+  menu[menu]
+  play[play]
+  pause[pause]
+  over[game_over]
+  menu -->|Play| play
+  play -->|Pause button| pause
+  pause -->|Resume pop| play
+  pause -->|Restart| play
+  pause -->|Main menu| menu
+  play -->|onGameOver| over
+  over -->|Replay| play
+  over -->|Main menu| menu
 ```
 
-### Step 2: Build the World in `GameplayRoute`
-The `GameplayRoute` (`lib/game/routes/gameplay_route.dart`) acts as your main stage/level manager. You add your background, map, and entity spawners directly to it.
+- **Pause** is pushed on top of gameplay (`pushNamed('pause')`), so `pop()` returns to the same run.
+- **Game over** uses `pushReplacementNamed('game_over')` so the previous gameplay route is not kept (`game_over` route uses `maintainState: false`).
+
+---
+
+## Customizing menu, pause, and game over
+
+All of these are **Flame components** under `lib/game/routes/`. Adjust layout in `onGameResize`, copy styling from existing `TextComponent` / `TextPaint` blocks, or swap components.
+
+### Main menu — `main_menu_route.dart`
+
+- **Background**: `BackgroundGradient` with `colorsResolver` reading `GameType.colorMatch.cardColors` (change when you add modes in `game_type_config.dart`).
+- **Title / high score**: `onMount` sets text from `GameType...displayName` and `LocalStorage.getHighScore(gameName)` where `gameName` is the enum’s `.name` (e.g. `colorMatch`).
+- **Play**: `PlayButton` extends `MenuButton` and calls `game.router.pushReplacementNamed('play')`.
+
+### Pause — `pause_route.dart`
+
+- **Dim layer**: `DimOverlay` (from `background_gradient.dart`) covers the full viewport; gameplay stays underneath but does not update while this route is active.
+- **Buttons**: Resume (`pop()`), Restart (`pop` then `pushReplacementNamed('play')`), Main menu (`pop` then `pushReplacementNamed('menu')`).
+
+### Game over — `game_over_route.dart`
+
+- Reads `game.lastScore` and `game.lastGameWon` set by `GameplayRoute` before navigating.
+- Persists high score via `LocalStorage.setHighScore(gameName, score)` when the run beats the previous best.
+- **Important**: use the **same** `gameName` key as the main menu (`GameType.yourMode.name`) so high scores stay consistent.
+
+### Shared buttons and colors
+
+- **`MenuButton`** (`menu_button.dart`): primary/secondary gradient styles; subclass and implement `onTap()` like the existing `*Button` classes.
+- **`MenuButtonColors`**: edit static colors to retheme all menu-style buttons at once.
+
+---
+
+## Adding or replacing gameplay
+
+### 1. `GameplayDelegate`
+
+Gameplay for a mode is a **`GameplayDelegate`** (`lib/features/gameplay/gameplay_delegate.dart`): a `PositionComponent` with:
+
+- `onGameOver(bool isWin, int score)` — call when the round ends; the route handler sets `game.lastScore` / `game.lastGameWon` and opens `game_over`.
+- `onScoreUpdated(int score)` — optional HUD updates.
+- `reset()` — called from `GameplayRoute.onMount` when a new run starts.
+- Optional hooks: `onGameStart`, `onGamePause`, `onGameResume` (override if you need them).
+
+The sample **`ColorMatchDelegate`** shows a full implementation: layout in `onGameResize`, logic in `update`, and calling `onGameOver` / `onScoreUpdated` at the right times.
+
+### 2. Wire the delegate — `gameplay_route.dart`
+
+- Instantiate your delegate in `onLoad` (replace or switch on `GameType` if you add multiple modes).
+- Keep the existing `onGameOver` callback pattern so audio and router behavior stay consistent.
+- Preload audio in `onLoad` / `FlameAudio` as needed; start/stop BGM in `onMount` / `onRemove`.
+- **`PauseButton`** in this file opens the pause route; reposition it in `onGameResize` if you change safe areas.
+
+### 3. Branding and high scores — `GameType` + `game_type_config.dart`
+
+- Add enum values in `my_casual_game.dart`.
+- Extend `displayName` and `cardColors` in `game_type_config.dart` for menu title and gradient.
+- Point **main menu** and **game over** at the active `GameType` for `gameName` / display strings (today they reference `GameType.colorMatch` directly; with multiple modes you would pass the selected type from the game instance).
+
+For a longer checklist (multiple games on a selection screen, assets, etc.), see the project skill **Add New Game** at `.cursor/skills/add-new-game/SKILL.md` and align it with your current router if the skill mentions routes your fork does not use.
+
+---
+
+## Using shared services
+
+### Audio
+
+`AudioController` is registered in `get_it`:
+
 ```dart
-@override
-Future<void> onLoad() async {
-  add(BackgroundComponent());
-  add(PlayerComponent());
-  add(EnemySpawner());
-}
+getIt<AudioController>().playBgm('background.mp3');
+getIt<AudioController>().playSfx('ting.mp3');
+getIt<AudioController>().stopBgm();
 ```
 
-### Step 3: Create Custom Components
-Build your entities inside `lib/game/components/`. Inherit from `PositionComponent`, `SpriteComponent`, or `SpriteAnimationComponent`, and write your specific game loop logic.
-```dart
-class PlayerComponent extends SpriteComponent with HasGameReference<MyCasualGame> {
-  @override
-  Future<void> onLoad() async {
-    sprite = Flame.images.fromCache('player.png'); // Fetch preloaded asset!
-    size = Vector2(50, 50);
-    anchor = Anchor.center;
-    // Set initial position, add hitbox, etc.
-  }
+Place files under `assets/audio/` and list them in `pubspec.yaml` if you add new paths.
 
-  @override
-  void update(double dt) {
-    // Process input, update physics, handle gravity!
-    position.y += 100 * dt; 
-    super.update(dt);
-  }
-}
+### Settings and score (BLoC)
+
+From Flutter widgets (not from Flame components unless you pass callbacks/context):
+
+```dart
+context.read<SettingsCubit>().toggleSound();
+context.read<ScoreCubit>().addScore(10);
 ```
 
-### Step 4: Handle Game Over
-When the player hits an object, runs out of time, or health drops to zero, simply finalize the score and push them to the Game Over scene:
-```dart
-void onDeath() {
-  getIt<AudioController>().playSfx('game_over.mp3');
-  game.router.pushReplacementNamed('game_over');
-}
-```
+Gameplay in this template typically updates score through the delegate callbacks or local state; use cubits when you surface score in Flutter overlays.
+
+### Localization
+
+Add strings to `lib/l10n/app_en.arb`, then use `AppLocalizations.of(context)!` in Flutter. Flame `TextComponent` uses `TextPaint` / `TextStyle` directly; wire localized strings by passing them from Flutter into the game or by duplicating keys in a small shared map if you need l10n on Flame text.
+
+---
+
+## Optional project hygiene
+
+- Rename `MyCasualGame`, `flame_boilerplate`, and Android/iOS bundle identifiers to match your product.
+- Replace sample assets under `assets/` with your art and audio.
+- Add a dedicated **loading** route if you need a heavy preload step before `menu`; register it in `MyCasualGame`’s `routes` map and set `initialRoute` accordingly.
+
+---
+
+## License
+
+Use and modify this boilerplate per your team’s policy; refer to repository license if one is added.
